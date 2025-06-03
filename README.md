@@ -5,7 +5,7 @@ Implementation is
 https://www.meilisearch.com/docs/learn/ai_powered_search/getting_started_with_ai_search#choose-an-embedder-name
 
 ```bash
-git clone git@github.com:survos-sites/kitchen && kitchen
+git clone git@github.com:survos-sites/kitchen && cd kitchen
 composer install
 ```
 

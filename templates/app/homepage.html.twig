@@ -2,5 +2,36 @@
 
 {% block body %}
 
-    Welcome to the search engine!
+    <form method="get" action="{{ path('search_hybrid') }}">
+        <input
+            type="text"
+            name="query"
+            value="{{ query }}"
+            placeholder="Enter search terms…"
+            autofocus
+        />
+        <button type="submit">Search</button>
+    </form>
+
+    {% if query %}
+        <h2>Results for “{{ query }}”</h2>
+
+        {% if results is not empty %}
+            <ul>
+                {% for item in results %}
+                    <li>
+                        <code>{{ (item._rankingScore * 100)|number_format(1) }}</code>
+                        {# Adjust “item.name” to whatever field(s) you want to show #}
+                        {{ item.name }}
+                        <span class="secondary"><i>{{ item.description }}</i></span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
+
+    {{ dump(hits) }}
+
 {% endblock %}

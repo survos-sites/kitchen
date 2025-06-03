@@ -2,11 +2,15 @@
 
 namespace App\Controller;
 
+use App\Command\ImportKitchenDataCommand;
 use App\Service\EmbedderService;
 use App\Service\MeiliClientService;
+use Symfony\Bridge\Twig\Attribute\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,11 +22,14 @@ class SearchController extends AbstractController
     {
     }
 
-    #[Route('/search', name: 'search_kitchen', methods: ['GET'])]
-    public function search(Request $request): JsonResponse
+    #[Route('/search.{_format}', name: 'search_hybrid', methods: ['GET'])]
+    #[Template('app/homepage.html.twig')]
+    public function search(
+        $_format = '.html',
+        #[MapQueryParameter] string $query = 'kitchen utensils made of wood'
+    ): JsonResponse|array
     {
-        $query = trim($request->query->get('q', ''));
-        $query = "kitchen utensils made of wood";
+
         if ($query === '') {
             return new JsonResponse(
                 ['error' => 'Missing query parameter "q".'],
@@ -39,7 +46,7 @@ class SearchController extends AbstractController
             );
         }
 
-        $index = $this->meili->getIndex('kitchen');
+        $index = $this->meili->getIndex(ImportKitchenDataCommand::INDEX_NAME);
 //        $vectorSearch = [
 //            "q" => $q,
 //            "hybrid" => [
@@ -51,9 +58,10 @@ class SearchController extends AbstractController
             "hybrid" => [
                 "embedder" => "products-openai"
             ],
+            "showRankingScore" => true,
             'vector' => $vector,
-
         ]);
+//        dd($hits);
 //            dd($hits->getHits());
         try {
 //            $hits = $this->meili->vectorSearch($vectorSearch, 10);
@@ -63,15 +71,22 @@ class SearchController extends AbstractController
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-        $new_array =
-
-        $hits = array_map(fn($hit) =>
-            array_intersect_key($hit, array_flip(['id', 'name', 'description'])),
+        $results  = array_map(fn($hit) =>
+            array_intersect_key($hit, array_flip([
+                'id',
+                'name',
+                '_rankingScore',
+                'description'])),
             $hits->getHits());
 
-        return new JsonResponse([
+
+        return $_format === 'json'
+        ? new JsonResponse([
             'query' => $query,
             'results' => $hits
-        ]);
+        ])
+            : ['query' => $query,
+                'semanticHitCount' => $hits->getSemanticHitCount(),
+                'results' => $results, 'hits' => $hits];
     }
 }
