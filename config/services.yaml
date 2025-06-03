@@ -12,8 +12,8 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             string $openAiApiKey: '%env(OPENAI_API_KEY)%'
-            string $meiliHost: '%env(MEILISEARCH_HOST)%'
-            string $meiliApiKey: '%env(MEILISEARCH_API_KEY)%'
+            string $meiliHost: '%env(MEILI_SERVER)%'
+            string $meiliApiKey: '%env(MEILI_API_KEY)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

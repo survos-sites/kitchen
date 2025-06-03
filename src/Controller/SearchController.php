@@ -22,6 +22,7 @@ class SearchController extends AbstractController
     {
     }
 
+    #[Route('/', name: 'app_homepage')]
     #[Route('/search.{_format}', name: 'search_hybrid', methods: ['GET'])]
     #[Template('app/homepage.html.twig')]
     public function search(

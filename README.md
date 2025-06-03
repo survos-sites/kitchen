@@ -13,8 +13,8 @@ Add the keys for meili and open ai
 
 ```
 #.env.local
-MEILISEARCH_HOST=http://127.0.0.1:7700
-MEILISEARCH_API_KEY=
+MEILI_API_KEY=
+MEILI_SERVER=http://127.0.0.1:7700/
 OPENAI_API_KEY=
 ```
 

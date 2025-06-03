@@ -9,10 +9,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AppController extends AbstractController
 {
-    #[Route('/', name: 'app_homepage')]
-    #[Template('app/homepage.html.twig')]
-    public function index(): Response|array
-    {
-        return [];
-    }
+//    #[Route('/', name: 'app_homepage')]
+//    #[Template('app/homepage.html.twig')]
+//    public function index(): Response|array
+//    {
+//        return [];
+//    }
 }
