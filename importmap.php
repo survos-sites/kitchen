@@ -32,4 +32,21 @@ return [
         'version' => '2.1.1',
         'type' => 'css',
     ],
+    'bootstrap' => [
+        'version' => '5.3.6',
+    ],
+    '@popperjs/core' => [
+        'version' => '2.11.8',
+    ],
+    'bootstrap/dist/css/bootstrap.min.css' => [
+        'version' => '5.3.6',
+        'type' => 'css',
+    ],
+    '@tabler/core' => [
+        'version' => '1.3.2',
+    ],
+    '@tabler/core/dist/css/tabler.min.css' => [
+        'version' => '1.3.2',
+        'type' => 'css',
+    ],
 ];

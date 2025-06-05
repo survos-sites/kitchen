@@ -36,20 +36,24 @@ class MeiliClientService
 
     public function getIndex(string $indexCode): Indexes
     {
-        $this->ensureIndexExists($indexCode);
+//        $this->ensureIndexExists($indexCode);
         return $this->getClient()->index($indexCode);
-
     }
 
-    private function ensureIndexExists(string $indexName): void
+    private function ensureIndexExists(string $indexName,
+        ?string $documentTemplate = null,
+
+    ): void
     {
         $index = $this->client->getIndex($indexName);
+
         $embedder = [
             'products-openai' => [
                 'source' => 'openAi',
+                "dimensions" => 1536,
                 'model' => 'text-embedding-3-small',
                 'apiKey' => $this->openAiApiKey,
-                'documentTemplate' => 'An object used in a kitchen named "{{doc.name}}"',
+//                'documentTemplate' => 'An object used in a kitchen named "{{doc.name}}"',
             ]
         ];
 //        'vector' => [

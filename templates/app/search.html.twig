@@ -5,42 +5,56 @@
     {{ form_start(form, {
         'attr': { 'id': 'search-form', 'data-target': 'search.form' }
     }) }}
+    <fieldset role="group">
 
-    {{ form_rest(form) }}
-{#    <div class="field">#}
-{#        {{ form_row(form.q) }}#}
-{#    </div>#}
-{#    <div class="field">#}
-{#        <label>Min Price: <span data-search-target="minValue">{{ form.min.vars.value ?: form.min.vars.attr.min }}</span></label>#}
-{#        {{ form_widget(form.min) }}#}
-{#    </div>#}
-{#    <div class="field">#}
-{#        <label>Max Price: <span data-search-target="maxValue">{{ form.max.vars.value ?: form.max.vars.attr.max }}</span></label>#}
-{#        {{ form_widget(form.max) }}#}
-{#    </div>#}
+        <div class="field">
+            {{ form_row(form.q) }}
+        </div>
+        {# </fieldset> #}
+        {# <fieldset role="group"> #}
+        <div class="field">
+            <label>Threshold</label>
+            {{ form_widget(form.threshold) }}
+            {#        </div> #}
+            {#        <div class="field"> #}
+            {#            <label>Max Price: <span data-search-target="maxValue">{{ form.max.vars.value ?: form.max.vars.attr.max }}</span></label> #}
+            {#            {{ form_widget(form.similiarityRation) }} #}
+            {#        </div> #}
+            {{ form_rest(form) }}
+        </div>
+    </fieldset>
+
     <button type="submit">Search</button>
     {{ form_end(form) }}
 
-    {% if query %}
-        <h2>Results for “{{ query }}”</h2>
 
-        {% if results is not empty %}
-            <ul>
-                {% for item in results.hits %}
-                    <li>
-                        <code>{{ (item._rankingScore * 100)|number_format(1) }}</code>
-                        <b>{{ item.category }}</b>
-                        {# Adjust “item.name” to whatever field(s) you want to show #}
-                        {{ item.title }}
-                        <span class="secondary"><i>{{ item.description }}</i></span>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No results found.</p>
-        {% endif %}
-    {% endif %}
+    <ul class="list-unstyled">
+        {# Loop through each product and render only title, description, category, brand, price #}
+        {% for product in results.hits|default([]) %}
+            <li class="cardx">
+                <h2>{{ product.title }}</h2>
+                <div>
+                    {{ product.description }}
+                    <p><strong>Category:</strong> {{ product.category }}</p>
+                    {% if product.brand|default(false) %}
+                        <strong>Brand:</strong> {{ product.brand }}
+                    {% endif %}
+{#                <p><strong>Price:</strong> ${{ product.price }}</p>#}
+                <ul class="list-inline">
+                    {% for tag in product.tags %}
+                        <li class="list-inline-item">
 
-{#    {{ dump(hits) }}#}
+                <span class="badge">
+                            {{ tag }}
+                        </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+                </div>
+
+            </li>
+        {% endfor %}
+    </ul>
+
 
 {% endblock %}

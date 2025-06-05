@@ -4,60 +4,102 @@ namespace App\Command;
 use App\Service\EmbedderService;
 use App\Service\MeiliClientService;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsCommand(
-    name: 'import:kitchen-data',
-    description: 'Import sample kitchen items into Meilisearch with embeddings'
+    name: 'import:products',
+    description: 'Import dummy products into Meilisearch with embeddings'
 )]
 final class ImportProductCommand
 {
-    const INDEX_NAME = 'kitchen';
+    const INDEX_NAME = 'dummy_products';
+    const EMBEDDER = 'openai_dummy_products';
 
     public function __construct(
-        private EmbedderService $embedder,
+        #[Autowire('%env(OPENAI_API_KEY)%')] private string $openAiApiKey,
+        private CacheInterface $cache,
         private MeiliClientService $meili)
     {
     }
 
     public function __invoke(
-        SymfonyStyle $io
+        SymfonyStyle $io,
+
+        #[Option("maximum number of products to import")] int $limit=50,
+        #[Option("Initialize the index")] bool $init=false,
+        #[Option("index the docs", name: 'index')] bool $createIndex=false
     ): int
     {
-        $io->title('Importing sample kitchen data into Meilisearch');
-
-        $sampleItems = [
-            ['id' => 1, 'name' => 'Chef Knife',        'description' => 'A high-quality stainless steel chef knife with 8-inch blade.'],
-            ['id' => 2, 'name' => 'Cutting Board',     'description' => 'Bamboo cutting board, 15×12 inches, reversible design.'],
-            ['id' => 3, 'name' => 'Mixing Bowls Set',  'description' => 'Set of 3 stainless steel mixing bowls (1 qt, 2 qt, 5 qt).'],
-            ['id' => 4, 'name' => 'Silicone Spatula',  'description' => 'Heat-resistant silicone spatula, comfortable grip.'],
-            ['id' => 5, 'name' => 'Measuring Cups',    'description' => 'Plastic measuring cups set (1/4, 1/3, 1/2, 1, 2 cups).'],
-            ['id' => 6, 'name' => 'Blender',           'description' => 'High-speed countertop blender for smoothies and soups.'],
-            ['id' => 7, 'name' => 'Cast Iron Skillet', 'description' => '10-inch pre-seasoned cast iron skillet, even heat distribution.'],
-            ['id' => 8, 'name' => 'Whisk',             'description' => 'Stainless steel balloon whisk for beating eggs and sauces.'],
-            ['id' => 9, 'name' => 'Kitchen Shears',    'description' => 'Heavy-duty kitchen shears with bottle opener feature.'],
-            ['id' => 10,'name' => 'Vegetable Peeler',  'description' => 'Stainless steel swivel peeler with ergonomic handle.'],
-        ];
-
-        $io->text('Computing embeddings for each item…');
-        $docs = [];
-        foreach ($sampleItems as $item) {
-            $textToEmbed = $item['name'] . '. ' . $item['description'];
-            $embedding = $this->embedder->embed($textToEmbed);
-            $docs[] = [
-                'id'          => $item['id'],
-                'name'        => $item['name'],
-                'description' => $item['description'],
-                '_vector'     => $embedding,
+        $client = $this->meili->getClient();
+        if ($init) {
+            $io->text('Initializing the index');
+            try {
+                $index = $client->getIndex(self::INDEX_NAME);
+            } catch (\Throwable $e) {
+                if ($e->getCode() === 404) {
+                    $createIndexTask = $client->createIndex(self::INDEX_NAME);
+                    $client->waitForTask($createIndexTask);
+                }
+            }
+            $documentTemplate = '
+                Product {{ doc.sku }} is {{ doc.title }}
+                and is described as {{ doc.description | truncatewords: 20 }}
+                ';
+            $embedder = [
+                self::EMBEDDER => [
+                    'source' => 'openAi',
+                    'model' => 'text-embedding-3-small',
+                    'apiKey' => $this->openAiApiKey,
+                    'documentTemplate' => $documentTemplate,
+                ]
             ];
-            $io->text(sprintf('  • Item #%d (%s) embedded.', $item['id'], $item['name']));
+            $task = $index->updateEmbedders(
+                $embedder,
+            );
+            $results = $client->waitForTask($task['taskUid']);
         }
 
-        $io->text('Indexing documents into Meilisearch…');
-        $this->meili->indexDocuments(self::INDEX_NAME, $docs);
+        $index = $client->getIndex(self::INDEX_NAME);
+
+        if ($createIndex) {
+            $docs = [];
+            $io->title("Importing $limit dummyjson products into Meilisearch");
+            $products = $this->cache->get('products',
+                fn() => json_decode(file_get_contents('https://dummyjson.com/products?lmiit=100')));
+
+
+            foreach ($products->products as $idx => $product) {
+                $io->text('Computing embeddings for ' . $product->title);
+                $docs[] = $product;
+                if ($limit && ($idx >= $limit)) {
+                    break;
+                }
+            }
+
+            $io->text('Indexing documents into Meilisearch…');
+            $this->meili->indexDocuments(self::INDEX_NAME, $docs);
+        }
+
+        // @todo: wait
+
+        $hits = $index->search('red cosmetics', [
+            'retrieveVectors' => true,
+            "rankingScoreThreshold" => 0.5,
+            'showRankingScoreDetails' => true,
+            'hybrid' => [
+                'embedder' => self::EMBEDDER,
+            ]
+        ]);
+        foreach ($hits->getHits() as $hit) {
+            $io->writeln(json_encode($hit));
+        }
+        dd($hits);
 
         $io->success('All kitchen items have been imported into Meili index "".' . self::INDEX_NAME);
         return Command::SUCCESS;
