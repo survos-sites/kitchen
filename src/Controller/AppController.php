@@ -15,6 +15,9 @@ final class AppController extends AbstractController
     #[Template('app/homepage.html.twig')]
     public function index(): Response|array
     {
+        return $this->redirectToRoute('search_hybrid', [
+            'indexName' => ImportProductCommand::INDEX_NAME,
+        ]);
         return [
             'db' => [
                 ImportProductCommand::INDEX_NAME,

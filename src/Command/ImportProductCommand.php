@@ -48,7 +48,12 @@ final class ImportProductCommand
                 }
             }
             $documentTemplate = '
-                Product {{ doc.sku }} is {{ doc.title }}
+                Product {{ doc.sku }} is {{ doc.title }}.
+                It is tagged with
+                {% for tag in doc.tags %}
+  {{ user }}
+{% endfor %}
+
                 and is described as {{ doc.description | truncatewords: 20 }}
                 ';
             $embedder = [
@@ -65,43 +70,49 @@ final class ImportProductCommand
             $results = $client->waitForTask($task['taskUid']);
         }
 
-        $index = $client->getIndex(self::INDEX_NAME);
 
         if ($createIndex) {
-            $docs = [];
-            $io->title("Importing $limit dummyjson products into Meilisearch");
-            $products = $this->cache->get('products',
-                fn() => json_decode(file_get_contents('https://dummyjson.com/products?lmiit=100')));
+            $batch = 50;
+            for ($start = 0; $start < 200; $start += $batch) {
+                $url = "https://dummyjson.com/products?limit=$batch&skip=$start";
+                $io->title("Importing $url");
+                $products = $this->cache->get(md5($url),
+                    fn() => json_decode(file_get_contents($url)));
 
 
-            foreach ($products->products as $idx => $product) {
-                $io->text('Computing embeddings for ' . $product->title);
-                $docs[] = $product;
-                if ($limit && ($idx >= $limit)) {
-                    break;
+                $docs = [];
+                foreach ($products->products as $idx => $product) {
+                    $io->text('Computing embeddings for ' . $product->title);
+                    $docs[] = $product;
+//                    if ($limit && ($idx >= $limit)) {
+//                        break;
+//                    }
                 }
+
+                $io->text('Indexing documents into Meilisearch…' . count($docs));
+                $this->meili->indexDocuments(self::INDEX_NAME, $docs);
             }
 
-            $io->text('Indexing documents into Meilisearch…');
-            $this->meili->indexDocuments(self::INDEX_NAME, $docs);
+            $io->success(
+                sprintf('%d dummy items have been imported into Meili index "".' . self::INDEX_NAME, count($docs))
+            );
+
         }
 
         // @todo: wait
+//
+//        $hits = $index->search('red cosmetics', [
+//            'retrieveVectors' => true,
+//            "rankingScoreThreshold" => 0.5,
+//            'showRankingScoreDetails' => true,
+//            'hybrid' => [
+//                'embedder' => self::EMBEDDER,
+//            ]
+//        ]);
+//        foreach ($hits->getHits() as $hit) {
+//            $io->writeln(json_encode($hit));
+//        }
 
-        $hits = $index->search('red cosmetics', [
-            'retrieveVectors' => true,
-            "rankingScoreThreshold" => 0.5,
-            'showRankingScoreDetails' => true,
-            'hybrid' => [
-                'embedder' => self::EMBEDDER,
-            ]
-        ]);
-        foreach ($hits->getHits() as $hit) {
-            $io->writeln(json_encode($hit));
-        }
-        dd($hits);
-
-        $io->success('All kitchen items have been imported into Meili index "".' . self::INDEX_NAME);
         return Command::SUCCESS;
     }
 }

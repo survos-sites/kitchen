@@ -27,6 +27,29 @@
     <button type="submit">Search</button>
     {{ form_end(form) }}
 
+    {% for product in results.hits|default([]) %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ product.title }}</h5>
+                    <span class="badge bg-primary">Score {{ (product._rankingScore*100)|number_format(1) }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ product.description }}
+                        {% for tag in product.tags %}
+                            <span class="badge bg-primary me-1">{{ tag }}</span>
+                        {% endfor %}
+
+                    </p>
+                    {% if product.brand|default(false) %}
+                    <p class="mb-1"><strong>Brand:</strong> {{ product.brand }}</p>
+                    {% endif %}
+                    <p class="mb-2"><strong>Category:</strong> {{ product.category }}</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
 
     <ul class="list-unstyled">
         {# Loop through each product and render only title, description, category, brand, price #}

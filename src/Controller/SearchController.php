@@ -30,7 +30,7 @@ class SearchController extends AbstractController
     public function search(
         string                      $indexName,
         Request                     $request,
-        #[MapQueryParameter] string $query = 'bright cosmetics',
+        #[MapQueryParameter] string $query = 'face cosmetics',
                                     $_format = '.html',
     ): JsonResponse|array
     {

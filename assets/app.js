@@ -9,5 +9,11 @@ import './styles/app.css';
 
 console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
 
-import '@tabler/core';
-import '@tabler/core/dist/css/tabler.min.css';
+// import '@picocss/pico';
+// import '@picocss/pico/css/pico.min.css'
+
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+// import '@tabler/core';
+// import '@tabler/core/dist/css/tabler.min.css';
