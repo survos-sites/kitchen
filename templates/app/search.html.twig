@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {{ form_start(form, {
+        'attr': { 'id': 'search-form', 'data-target': 'search.form' }
+    }) }}
+
+    {{ form_rest(form) }}
+{#    <div class="field">#}
+{#        {{ form_row(form.q) }}#}
+{#    </div>#}
+{#    <div class="field">#}
+{#        <label>Min Price: <span data-search-target="minValue">{{ form.min.vars.value ?: form.min.vars.attr.min }}</span></label>#}
+{#        {{ form_widget(form.min) }}#}
+{#    </div>#}
+{#    <div class="field">#}
+{#        <label>Max Price: <span data-search-target="maxValue">{{ form.max.vars.value ?: form.max.vars.attr.max }}</span></label>#}
+{#        {{ form_widget(form.max) }}#}
+{#    </div>#}
+    <button type="submit">Search</button>
+    {{ form_end(form) }}
+
+    {% if query %}
+        <h2>Results for “{{ query }}”</h2>
+
+        {% if results is not empty %}
+            <ul>
+                {% for item in results.hits %}
+                    <li>
+                        <code>{{ (item._rankingScore * 100)|number_format(1) }}</code>
+                        <b>{{ item.category }}</b>
+                        {# Adjust “item.name” to whatever field(s) you want to show #}
+                        {{ item.title }}
+                        <span class="secondary"><i>{{ item.description }}</i></span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
+
+{#    {{ dump(hits) }}#}
+
+{% endblock %}
