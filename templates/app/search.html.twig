@@ -35,7 +35,9 @@
 {% endblock %}
 
 {% block chad %}
-{# Wrap cards in a responsive Bootstrap grid #}
+    <h3>Query: {{ results.query }}, Semantic Hits: {{ results.semanticHitCount }} of {{ results.estimatedTotalHits }}</h3>
+
+    {# Wrap cards in a responsive Bootstrap grid #}
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for product in results.hits|default([]) %}
         <div class="col">
