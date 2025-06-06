@@ -77,7 +77,9 @@ class SearchController extends AbstractController
         $params =  [
             'form' => $form->createView(),
             'results' => $results,
-            'query' => $query];
+            'query' => $query,
+            'data' => $data, // the query data
+        ];
         return $params;
     }
 

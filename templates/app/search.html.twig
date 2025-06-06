@@ -13,8 +13,10 @@
         {# </fieldset> #}
         {# <fieldset role="group"> #}
         <div class="field">
-            <label>Threshold</label>
+            <label>Threshold: {{ data.threshold }}</label>
             {{ form_widget(form.threshold) }}
+            <label>semanticRatio: {{ data.semanticRatio }}</label>
+            {{ form_widget(form.semanticRatio) }}
             {#        </div> #}
             {#        <div class="field"> #}
             {#            <label>Max Price: <span data-search-target="maxValue">{{ form.max.vars.value ?: form.max.vars.attr.max }}</span></label> #}
@@ -27,30 +29,111 @@
     <button type="submit">Search</button>
     {{ form_end(form) }}
 
+    {% if results %}
+    {{ block('chad') }}
+    {% endif %}
+{% endblock %}
+
+{% block chad %}
+{# Wrap cards in a responsive Bootstrap grid #}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for product in results.hits|default([]) %}
         <div class="col">
             <div class="card h-100 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">{{ product.title }}</h5>
-                    <span class="badge bg-primary">Score {{ (product._rankingScore*100)|number_format(1) }}</span>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">{{ product.description }}
-                        {% for tag in product.tags %}
-                            <span class="badge bg-primary me-1">{{ tag }}</span>
-                        {% endfor %}
+                {# Thumbnail (if present) #}
+                {% if product.thumbnail %}
+                    <img
+                        src="{{ product.thumbnail }}"
+                        alt="{{ product.title }}"
+                        class="card-img-top"
+                        style="object-fit: cover; height: 180px;"
+                    >
+                {% endif %}
 
-                    </p>
-                    {% if product.brand|default(false) %}
-                    <p class="mb-1"><strong>Brand:</strong> {{ product.brand }}</p>
+                <div class="card-body">
+                    {# Title & Description #}
+                    <h5 class="card-title">{{ product.title }}
+                        <span class="strong bg-info">
+                        {{ (product._rankingScore * 100)|number_format(1) }}%
+                        </span>
+
+
+                    </h5>
+                    <p class="card-text">{{ product.description }}</p>
+
+                    {# Tags as badges #}
+                    {% if product.tags is defined and product.tags|length %}
+                        <div class="mb-2">
+                            {% for tag in product.tags %}
+                                <span class="badge bg-primary me-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
                     {% endif %}
-                    <p class="mb-2"><strong>Category:</strong> {{ product.category }}</p>
+
+                    {# Brand & Category #}
+                    {% if product.brand is defined and product.brand %}
+                        <p class="mb-1"><strong>Brand:</strong> {{ product.brand }}</p>
+                    {% endif %}
+                    {% if product.category is defined %}
+                        <p class="mb-1"><strong>Category:</strong> {{ product.category }}</p>
+                    {% endif %}
+                </div>
+
+                {# Footer with ranking score #}
+{#                <div class="card-footer bg-white">#}
+{#                    <small class="text-muted">#}
+{#                        Score: {{ (product._rankingScore * 100)|number_format(1) }}#}
+{#                    </small>#}
+{#                </div>#}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block results %}
+    <h3>Query: {{ results.query }}, Semantic Hits: {{ results.semanticHitCount }} of {{ results.estimatedTotalHits }}</h3>
+
+    {% for product in results.hits|default([]) %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="float-start">
+                        {% if product.thumbnail %}
+                            <img style="max-height: 90px" src="{{ product.thumbnail }}" alt="{{ product.title }}"
+                                 class="img-fluid">
+                        {% endif %}
+                        <span>{{ (product._rankingScore*100)|number_format(1) }}</span>
+                    </div>
+                    <div
+{#                        class="card-header bg-white d-flex justify-content-between align-items-center"#}
+                    >
+                        <strong class="card-title mb-0">{{ product.title }}</strong>
+                            {{ (product._rankingScore * 100)|number_format(1) }}%
+                        <sup class="badge badge-danger">
+                        </sup>
+
+                        <div class="card-text">
+                            {{ product.description }}
+                            {% for tag in product.tags %}
+                                <span class="badge bg-primary me-1">{{ tag }}</span>
+                            {% endfor %}
+
+                        {% if product.brand|default(false) %}
+                            <div class="mb-1"><strong>Brand:</strong> {{ product.brand }}</div>
+                        {% endif %}
+                        <div class="mb-2">
+                            <strong>Category:</strong> {{ product.category }}</div>
+                        </div>
                 </div>
             </div>
         </div>
     {% endfor %}
+{% endblock %}
 
-
+{% block asList %}
+    <h3>Semantic Hits: {{ results.semanticHitCount }}</h3>
     <ul class="list-unstyled">
         {# Loop through each product and render only title, description, category, brand, price #}
         {% for product in results.hits|default([]) %}
@@ -62,17 +145,17 @@
                     {% if product.brand|default(false) %}
                         <strong>Brand:</strong> {{ product.brand }}
                     {% endif %}
-{#                <p><strong>Price:</strong> ${{ product.price }}</p>#}
-                <ul class="list-inline">
-                    {% for tag in product.tags %}
-                        <li class="list-inline-item">
+                    {#                <p><strong>Price:</strong> ${{ product.price }}</p> #}
+                    <ul class="list-inline">
+                        {% for tag in product.tags %}
+                            <li class="list-inline-item">
 
                 <span class="badge">
                             {{ tag }}
                         </span>
-                        </li>
-                    {% endfor %}
-                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
 
             </li>
