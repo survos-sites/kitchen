@@ -49,4 +49,10 @@ return [
         'version' => '1.3.2',
         'type' => 'css',
     ],
+    '@meilisearch/instant-meilisearch' => [
+        'version' => '0.26.0',
+    ],
+    'meilisearch' => [
+        'version' => '0.50.0',
+    ],
 ];
