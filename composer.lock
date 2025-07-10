@@ -2603,16 +2603,16 @@
         },
         {
             "name": "survos/core-bundle",
-            "version": "1.5.529",
+            "version": "1.5.601",
             "source": {
                 "type": "git",
                 "url": "https://github.com/survos/SurvosCoreBundle.git",
-                "reference": "468332bcb862b8943f9bb6d5f215939cdf5c5bbf"
+                "reference": "78afcb7ea0eed5e6b49db5a5be0d20478d3217b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/survos/SurvosCoreBundle/zipball/468332bcb862b8943f9bb6d5f215939cdf5c5bbf",
-                "reference": "468332bcb862b8943f9bb6d5f215939cdf5c5bbf",
+                "url": "https://api.github.com/repos/survos/SurvosCoreBundle/zipball/78afcb7ea0eed5e6b49db5a5be0d20478d3217b5",
+                "reference": "78afcb7ea0eed5e6b49db5a5be0d20478d3217b5",
                 "shasum": ""
             },
             "require": {
@@ -2654,6 +2654,7 @@
                 "phpstan/phpstan": "^2.0",
                 "symfony/asset-mapper": "^6.4 || ^7.1",
                 "symfony/browser-kit": "^6.4 || ^7.1",
+                "symfony/console": "^7.2",
                 "symfony/framework-bundle": "^6.4 || ^7.1",
                 "symfony/phpunit-bridge": "^6.4 || ^7.1",
                 "symfony/twig-bundle": "^6.4 || ^7.1",
@@ -2680,7 +2681,7 @@
             ],
             "support": {
                 "issues": "https://github.com/survos/SurvosCoreBundle/issues",
-                "source": "https://github.com/survos/SurvosCoreBundle/tree/1.5.529"
+                "source": "https://github.com/survos/SurvosCoreBundle/tree/1.5.601"
             },
             "funding": [
                 {
@@ -2688,7 +2689,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-20T13:35:55+00:00"
+            "time": "2025-07-10T01:43:38+00:00"
         },
         {
             "name": "survos/deployment-bundle",
@@ -2755,12 +2756,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/survos/SurvosInspectionBundle.git",
-                "reference": "0c2c698f1485127f46c2ad173b5d24f3761a9369"
+                "reference": "f2e647b6e675fa0db6969e1bc6e990de0805e101"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/survos/SurvosInspectionBundle/zipball/0c2c698f1485127f46c2ad173b5d24f3761a9369",
-                "reference": "0c2c698f1485127f46c2ad173b5d24f3761a9369",
+                "url": "https://api.github.com/repos/survos/SurvosInspectionBundle/zipball/f2e647b6e675fa0db6969e1bc6e990de0805e101",
+                "reference": "f2e647b6e675fa0db6969e1bc6e990de0805e101",
                 "shasum": ""
             },
             "require": {
@@ -2837,7 +2838,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-08T16:48:48+00:00"
+            "time": "2025-07-10T09:49:28+00:00"
         },
         {
             "name": "survos/pico-bundle",
