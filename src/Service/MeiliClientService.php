@@ -94,8 +94,10 @@ class MeiliClientService
         $task = $this->client
             ->index($indexName)
             ->addDocuments($docs);
-//        dd($task);
-//        $this->client->waitForTask($task);
+        $results = $this->client->waitForTask($task['taskUid']);
+        if ($results['status'] <> 'succeeded') {
+            dd($results, $docs);
+        }
     }
 
     public function vectorSearch(string $indexName, array $vector, int $limit = 10): array

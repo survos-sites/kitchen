@@ -10,6 +10,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsCommand(
@@ -32,11 +33,13 @@ final class ImportProductCommand
         SymfonyStyle $io,
 
         #[Option("maximum number of products to import")] int $limit=50,
-        #[Option("Initialize the index")] bool $init=false,
-        #[Option("index the docs", name: 'index')] bool $createIndex=false
+        #[Option("create the index")] bool $init=false,
+        #[Option("import and index the data", name: 'import')] bool $import=false
     ): int
     {
         $client = $this->meili->getClient();
+
+
         if ($init) {
             $io->text('Initializing the index');
             try {
@@ -47,15 +50,11 @@ final class ImportProductCommand
                     $client->waitForTask($createIndexTask);
                 }
             }
-            $documentTemplate = '
-                Product {{ doc.sku }} is {{ doc.title }}.
-                It is tagged with
-                {% for tag in doc.tags %}
-  {{ user }}
-{% endfor %}
+            $documentTemplate = 'Product {{ doc.sku }} is {{ doc.title }}.
+Category is {{ doc.category }}.  Product tags are {% for tag in doc.tags %} {{ tag }} {% endfor %}';
+//
+//                and is described as {{ doc.description | truncatewords: 20 }}
 
-                and is described as {{ doc.description | truncatewords: 20 }}
-                ';
             $embedder = [
                 self::EMBEDDER => [
                     'source' => 'openAi',
@@ -64,14 +63,19 @@ final class ImportProductCommand
                     'documentTemplate' => $documentTemplate,
                 ]
             ];
+            dd($embedder);
             $task = $index->updateEmbedders(
                 $embedder,
             );
             $results = $client->waitForTask($task['taskUid']);
+            if ($results['status'] <> 'succeeded') {
+                dd($results);
+            }
         }
+        $index = $client->getIndex(self::INDEX_NAME);
 
 
-        if ($createIndex) {
+        if ($import) {
             $batch = 50;
             for ($start = 0; $start < 200; $start += $batch) {
                 $url = "https://dummyjson.com/products?limit=$batch&skip=$start";
@@ -79,14 +83,23 @@ final class ImportProductCommand
                 $products = $this->cache->get(md5($url),
                     fn() => json_decode(file_get_contents($url)));
 
-
                 $docs = [];
                 foreach ($products->products as $idx => $product) {
                     $io->text('Computing embeddings for ' . $product->title);
+                    $product = new OptionsResolver()
+                        ->setDefined(array_keys((array) $product))
+                        ->setDefaults([
+                            'tags' => [],
+                            'category' => null,
+                            'title'=> null,
+                            'sku'=> null,
+                            'description'=> null,
+                        ])->resolve((array)$product);
                     $docs[] = $product;
-//                    if ($limit && ($idx >= $limit)) {
-//                        break;
-//                    }
+                    $this->meili->indexDocuments(self::INDEX_NAME, $docs);
+                    if ($limit && ($start >= $limit)) {
+                        break;
+                    }
                 }
 
                 $io->text('Indexing documents into Meilisearch…' . count($docs));
@@ -99,19 +112,27 @@ final class ImportProductCommand
 
         }
 
+        $hits = $index->search('red cosmetics', [
+            'retrieveVectors' => true,
+            "rankingScoreThreshold" => 0.5,
+            'showRankingScoreDetails' => true,
+            "attributesToHighlight" => [
+                "description",
+                "title",
+            ],
+            'hybrid' => [
+                'embedder' => self::EMBEDDER,
+            ]
+        ]);
+        foreach ($hits->getHits() as $hit) {
+//            dd($hit, array_keys($hit));
+            unset($hit['_vectors']);
+//            unset($hit->_vectors);
+            $io->writeln(json_encode($hit, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES));
+            break;
+        }
         // @todo: wait
-//
-//        $hits = $index->search('red cosmetics', [
-//            'retrieveVectors' => true,
-//            "rankingScoreThreshold" => 0.5,
-//            'showRankingScoreDetails' => true,
-//            'hybrid' => [
-//                'embedder' => self::EMBEDDER,
-//            ]
-//        ]);
-//        foreach ($hits->getHits() as $hit) {
-//            $io->writeln(json_encode($hit));
-//        }
+
 
         return Command::SUCCESS;
     }

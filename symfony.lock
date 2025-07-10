@@ -87,8 +87,14 @@
             "config/routes/survos_command.yaml"
         ]
     },
+    "survos/core-bundle": {
+        "version": "1.5.529"
+    },
     "survos/deployment-bundle": {
         "version": "1.5.529"
+    },
+    "survos/inspection-bundle": {
+        "version": "dev-main"
     },
     "survos/pico-bundle": {
         "version": "dev-main"

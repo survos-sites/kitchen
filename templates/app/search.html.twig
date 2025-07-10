@@ -54,19 +54,21 @@
 
                 <div class="card-body">
                     {# Title & Description #}
-                    <h5 class="card-title">{{ product.title }}
+                    <h5 class="card-title">
+                        {{ product._formatted.title|raw }}
                         <span class="strong bg-info">
                         {{ (product._rankingScore * 100)|number_format(1) }}%
                         </span>
 
 
                     </h5>
-                    <p class="card-text">{{ product.description }}</p>
+{#                    <p class="card-text">{{ product.description }}</p>#}
+                    <p class="card-text">{{ product._formatted.description|raw }}</p>
 
                     {# Tags as badges #}
                     {% if product.tags is defined and product.tags|length %}
                         <div class="mb-2">
-                            {% for tag in product.tags %}
+                            {% for tag in product._formatted.tags %}
                                 <span class="badge bg-primary me-1">{{ tag }}</span>
                             {% endfor %}
                         </div>
@@ -74,10 +76,10 @@
 
                     {# Brand & Category #}
                     {% if product.brand is defined and product.brand %}
-                        <p class="mb-1"><strong>Brand:</strong> {{ product.brand }}</p>
+                        <p class="mb-1"><strong>Brand:</strong> {{ product._formatted.brand|raw }}</p>
                     {% endif %}
                     {% if product.category is defined %}
-                        <p class="mb-1"><strong>Category:</strong> {{ product.category }}</p>
+                        <p class="mb-1"><strong>Category:</strong> {{ product._formatted.category|raw }}</p>
                     {% endif %}
                 </div>
 

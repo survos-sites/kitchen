@@ -16,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 final class ImportKitchenDataCommand
 {
     const INDEX_NAME = 'kitchen';
+    const EMBEDDER = 'openai_kitchen';
 
     public function __construct(
         private EmbedderService $embedder,

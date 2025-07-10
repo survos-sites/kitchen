@@ -37,6 +37,7 @@ class SearchController extends AbstractController
         // need a config!
         $embedder = match($indexName) {
             ImportProductCommand::INDEX_NAME => ImportProductCommand::EMBEDDER,
+            ImportKitchenDataCommand::INDEX_NAME => ImportKitchenDataCommand::EMBEDDER,
         };
         $index = $this->meili->getIndex($indexName);
         $defaults = [
@@ -96,11 +97,22 @@ class SearchController extends AbstractController
                 "embedder" => $embedder,
                 "semanticRatio" => $semanticRatio / 100,
             ],
+            "highlightPreTag" =>  "<mark>",
+              "highlightPostTag" =>  "</mark>",
+            "attributesToHighlight" => [
+                "description",
+                "category",
+                "brand",
+                "tags",
+                "title",
+            ],
+
             "rankingScoreThreshold" => $threshold / 100,
             "showRankingScore" => true,
 //            'vector' => $vector,
         ]);
 //        dump($settings);
+//        dd($results, $settings);
 
         return $results;
     }
